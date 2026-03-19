@@ -2,15 +2,15 @@ name: Daily Alpha Generation
 
 on:
   schedule:
-    # Runs at 03:00 UTC every day (08:30 AM IST)
+    # Runs daily at 03:00 UTC (08:30 AM IST)
     - cron: '0 3 * * *'
-  workflow_dispatch: # Allows you to click a "Run Now" button manually
+  workflow_dispatch: # Allows you to trigger it manually via the "Run workflow" button
 
-# Explicitly grant permissions so the bot can save the AI Memory DB
+# Grants the bot permission to push the SQLite Memory database back to your repo
 permissions:
   contents: write
 
-# Opt into the new Node.js 24 engine to silence the warning
+# Silences the GitHub Node.js 20 deprecation warnings
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -20,16 +20,17 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4 # <-- UPGRADED to v4
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5 # <-- UPGRADED to v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
+          # Installs packages from your newly cleaned requirements.txt
           pip install -r requirements.txt
 
       - name: Run Investment OS (Cron Mode)
@@ -47,7 +48,14 @@ jobs:
         run: |
           git config --global user.name "Investment-OS-Bot"
           git config --global user.email "bot@investmentos.local"
+          
+          # Safe creation: Prevents git from crashing on the very first run
+          touch app.log
+          mkdir -p data && touch data/market_memory.db
+          
+          # Stage the files
           git add data/market_memory.db app.log
-          # Only commit if there are changes to avoid workflow errors
+          
+          # Commit and Push (will skip gracefully if nothing changed today)
           git commit -m "🤖 Auto-Update AI Memory & Logs" || echo "No changes to commit"
           git push
