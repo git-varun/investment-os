@@ -2,9 +2,17 @@ name: Daily Alpha Generation
 
 on:
   schedule:
-    # Runs at 03:00 UTC every day (which is 08:30 AM IST in India)
+    # Runs at 03:00 UTC every day (08:30 AM IST)
     - cron: '0 3 * * *'
   workflow_dispatch: # Allows you to click a "Run Now" button manually
+
+# Explicitly grant permissions so the bot can save the AI Memory DB
+permissions:
+  contents: write
+
+# Opt into the new Node.js 24 engine to silence the warning
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   run-investment-os:
@@ -12,14 +20,12 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/checkout@v4 # <-- UPGRADED to v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # <-- UPGRADED to v5
         with:
-          python-version: '3.13' # Matches your environment
+          python-version: '3.13'
 
       - name: Install Dependencies
         run: |
